@@ -59,10 +59,9 @@ class SocketManager {
 
   send(message: WSMessage) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      console.log('Sending WebSocket message:', message);
       this.socket.send(JSON.stringify(message));
     } else {
-      console.error('WebSocket is not connected, ready state:', this.socket?.readyState);
+      console.error('WebSocket is not connected');
     }
   }
 
