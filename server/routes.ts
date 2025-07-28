@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // WebSocket connection handling
   wss.on('connection', (ws: ExtendedWebSocket) => {
-    console.log('New WebSocket connection');
+    console.log('New WebSocket connection established');
 
     ws.on('message', async (message: Buffer) => {
       try {
@@ -92,10 +92,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         switch (validatedMessage.type) {
           case 'join_session': {
             const { sessionId, participantName, participantId } = validatedMessage.data;
+            console.log(`WebSocket join_session: sessionId=${sessionId}, participantName=${participantName}, participantId=${participantId}`);
             
             // Verify session exists
             const session = await storage.getSession(sessionId);
             if (!session) {
+              console.log(`Session not found: ${sessionId}`);
               ws.send(JSON.stringify({ error: 'Session not found' }));
               return;
             }
@@ -107,7 +109,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Host reconnecting with existing participant ID
               participant = await storage.getParticipant(participantId);
               if (participant) {
+                console.log(`Found existing participant by ID: ${participant.name}`);
                 await storage.updateParticipant(participantId, { isConnected: true });
+              } else {
+                console.log(`Participant ID not found: ${participantId}`);
               }
             } else {
               // Check by name for existing participant
@@ -115,9 +120,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               participant = existingParticipants.find(p => p.name === participantName);
               
               if (participant) {
+                console.log(`Found existing participant by name: ${participant.name}`);
                 // Update existing participant connection status
                 await storage.updateParticipant(participant.id, { isConnected: true });
               } else {
+                console.log(`Adding new participant: ${participantName}`);
                 // Add new participant
                 participant = await storage.addParticipant({
                   sessionId,
@@ -132,6 +139,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ws.sessionId = sessionId;
               ws.participantId = participant.id;
               clients.set(participant.id, ws);
+              console.log(`WebSocket connected for participant: ${participant.name} (${participant.id})`);
+            } else {
+              console.log(`Failed to find or create participant`);
             }
 
             await broadcastSessionUpdate(sessionId);
