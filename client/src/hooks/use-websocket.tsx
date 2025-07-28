@@ -51,10 +51,10 @@ export function useWebSocket() {
     }
   };
 
-  const joinSession = (sessionId: string, participantName: string) => {
+  const joinSession = (sessionId: string, participantName: string, participantId?: string) => {
     sendMessage({
       type: 'join_session',
-      data: { sessionId, participantName }
+      data: { sessionId, participantName, participantId }
     });
   };
 

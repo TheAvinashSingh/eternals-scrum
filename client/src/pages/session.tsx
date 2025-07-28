@@ -48,6 +48,16 @@ export default function Session() {
     enabled: !!sessionId,
   });
 
+  // Auto-join WebSocket for hosts with participant ID
+  useEffect(() => {
+    if (sessionId && participantId && isConnected && initialData?.participants) {
+      const participant = initialData.participants.find((p: any) => p.id === participantId);
+      if (participant && !sessionData) {
+        joinSession(sessionId, participant.name, participantId);
+      }
+    }
+  }, [sessionId, participantId, isConnected, initialData, sessionData, joinSession]);
+
   // Join session when participant name is provided
   const handleJoinSession = () => {
     if (!participantName.trim()) {

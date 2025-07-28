@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertSessionSchema, insertParticipantSchema, insertVoteSchema, wsMessageSchema, type WSMessage } from "@shared/schema";
+import { insertSessionSchema, insertParticipantSchema, insertVoteSchema, wsMessageSchema, type WSMessage, type Vote } from "@shared/schema";
 import { z } from "zod";
 
 interface ExtendedWebSocket extends WebSocket {
@@ -54,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const participants = await storage.getParticipantsBySession(session.id);
       const voteHistory = await storage.getVoteHistory(session.id);
       
-      let votes = [];
+      let votes: Vote[] = [];
       if (session.currentVote) {
         votes = await storage.getVotesBySession(session.id, session.currentVote.label);
       }
@@ -91,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         switch (validatedMessage.type) {
           case 'join_session': {
-            const { sessionId, participantName } = validatedMessage.data;
+            const { sessionId, participantName, participantId } = validatedMessage.data;
             
             // Verify session exists
             const session = await storage.getSession(sessionId);
@@ -100,17 +100,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return;
             }
 
-            // Add participant or update existing one
-            let participant = await storage.addParticipant({
-              sessionId,
-              name: participantName,
-              isHost: false,
-              isConnected: true,
-            });
+            // Check if participant already exists by ID or name
+            let participant;
+            
+            if (participantId) {
+              // Host reconnecting with existing participant ID
+              participant = await storage.getParticipant(participantId);
+              if (participant) {
+                await storage.updateParticipant(participantId, { isConnected: true });
+              }
+            } else {
+              // Check by name for existing participant
+              const existingParticipants = await storage.getParticipantsBySession(sessionId);
+              participant = existingParticipants.find(p => p.name === participantName);
+              
+              if (participant) {
+                // Update existing participant connection status
+                await storage.updateParticipant(participant.id, { isConnected: true });
+              } else {
+                // Add new participant
+                participant = await storage.addParticipant({
+                  sessionId,
+                  name: participantName,
+                  isHost: false,
+                  isConnected: true,
+                });
+              }
+            }
 
-            ws.sessionId = sessionId;
-            ws.participantId = participant.id;
-            clients.set(participant.id, ws);
+            if (participant) {
+              ws.sessionId = sessionId;
+              ws.participantId = participant.id;
+              clients.set(participant.id, ws);
+            }
 
             await broadcastSessionUpdate(sessionId);
             break;
@@ -236,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const participants = await storage.getParticipantsBySession(sessionId);
     const voteHistory = await storage.getVoteHistory(sessionId);
     
-    let votes = [];
+    let votes: Vote[] = [];
     if (session.currentVote) {
       votes = await storage.getVotesBySession(sessionId, session.currentVote.label);
     }
