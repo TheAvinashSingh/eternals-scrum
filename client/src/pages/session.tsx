@@ -121,6 +121,11 @@ export default function Session() {
 
   const handleLeaveSession = () => {
     if (participantId && sessionId) {
+      if (isHost) {
+        // Host ending session - show confirmation
+        const confirmEnd = window.confirm("Are you sure you want to end this session? All participants will be disconnected.");
+        if (!confirmEnd) return;
+      }
       wsLeaveSession(sessionId, participantId);
     }
     navigate("/");
@@ -208,7 +213,7 @@ export default function Session() {
               className="text-slate-600 hover:text-red-600"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Leave Session
+              {isHost ? "End Session" : "Leave Session"}
             </Button>
           </div>
         </div>

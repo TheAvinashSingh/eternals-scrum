@@ -31,6 +31,14 @@ export function useWebSocket() {
           console.error('WebSocket error:', error);
         });
 
+        socketManager.on('session_ended', (message: string) => {
+          console.log('Session ended:', message);
+          // Show toast and redirect to home page when session ends
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+        });
+
       } catch (error) {
         console.error('Failed to connect to WebSocket:', error);
         setIsConnected(false);

@@ -99,6 +99,12 @@ export const wsMessageSchema = z.discriminatedUnion("type", [
     }),
   }),
   z.object({
+    type: z.literal("end_session"),
+    data: z.object({
+      sessionId: z.string(),
+    }),
+  }),
+  z.object({
     type: z.literal("start_vote"),
     data: z.object({
       sessionId: z.string(),

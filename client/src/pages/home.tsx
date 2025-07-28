@@ -55,8 +55,8 @@ export default function Home() {
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Session not found",
+        title: "Invalid Session Code",
+        description: "The entered 4-digit code is invalid or the session doesn't exist. Please check the code and try again.",
         variant: "destructive",
       });
     },

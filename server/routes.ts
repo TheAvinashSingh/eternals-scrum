@@ -229,13 +229,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'leave_session': {
             const { sessionId, participantId } = validatedMessage.data;
             
+            // Check if this is the host leaving (which ends the session)
+            const leavingParticipant = await storage.getParticipant(participantId);
+            const isHostLeaving = leavingParticipant?.isHost;
+            
             await storage.removeParticipant(participantId);
             clients.delete(participantId);
             
-            // Close the WebSocket connection for this participant
-            ws.close();
-
-            await broadcastSessionUpdate(sessionId);
+            if (isHostLeaving) {
+              // Host is leaving - end the entire session
+              await storage.updateSession(sessionId, { isActive: false });
+              
+              // Disconnect all participants
+              const allParticipants = await storage.getParticipantsBySession(sessionId);
+              for (const participant of allParticipants) {
+                const client = clients.get(participant.id);
+                if (client) {
+                  client.send(JSON.stringify({ 
+                    type: 'session_ended',
+                    message: 'Host ended the session' 
+                  }));
+                  client.close();
+                  clients.delete(participant.id);
+                }
+                await storage.removeParticipant(participant.id);
+              }
+            } else {
+              // Regular participant leaving
+              ws.close();
+              await broadcastSessionUpdate(sessionId);
+            }
             break;
           }
 
