@@ -1,0 +1,51 @@
+Overview
+The website is a Scrum Poker tool designed for Agile teams to facilitate estimation sessions interactively. The interface is designed specifically for desktop usage, optimized for responsiveness on desktop browsers only.
+User Journey and Functionality
+Homepage:
+	•	Clearly describes Scrum Poker with instructions for new users.
+	•	Two primary CTAs:
+	◦	Host a Session: Initiates creating a new session.
+	◦	Join a Session: Users can enter a session by inputting a 4-digit session code.
+Hosting a Session:
+	•	The host clicks "Host a Session," sets a unique 4-digit PIN code, and clicks "Create."
+	•	Upon creation, a unique session URL is generated (format: website.com/poker/{randomCode}), displayed prominently at the top for easy sharing.
+	•	Host interface allows:
+	◦	Viewing the list of active participants.
+	◦	Removing participants from the session.
+	◦	Defining visibility settings for votes (toggle to show/hide until revealed).
+	◦	Choosing available card values from options: 1, 2, 3, 5, 8, 13, 21, 34, coffee, ?
+Joining a Session:
+	•	Participants use the session link provided by the host or manually enter the 4-digit PIN on the homepage.
+	•	Upon joining, users enter their name, which is then displayed in real-time to all session participants.
+	•	Participants have the option to leave the session voluntarily.
+Voting Process:
+	1	Host initiates voting by entering a descriptive label for the voting round (e.g., "Story #12: Login Feature") and clicks "Start Voting."
+	2	All participants select a card privately from the provided options.
+	3	Users can change their selected card until votes are revealed.
+	4	The host can manually click "Show Votes" at any time, flipping all participant cards simultaneously.
+	5	Once votes are revealed:
+	◦	Individual user votes are displayed clearly next to usernames.
+	◦	The average numeric value is calculated and displayed (excluding non-numeric votes such as "coffee" or "?").
+	◦	A count summary of votes (e.g., how many users voted each specific number or card type) is displayed.
+	6	Host can click "Reset Votes" to reinitiate the voting round or start a new round by entering a new label.
+UI Layout:
+	•	Main Content Area:
+	◦	Top bar: session link, current voting label, and voting status.
+	◦	Center: participants' names and card selections (hidden until revealed).
+	•	Right Panel:
+	◦	Displays history of past votes, including labels, participant votes, and voting averages.
+	•	Buttons clearly labeled and action-oriented (e.g., "Start Voting," "Show Votes," "Reset Votes").
+Technical Specifications:
+	•	Frontend: React.js
+	•	Backend: Node.js (Express.js recommended for simplicity)
+	•	Storage: No persistent storage or database needed. All data managed in-memory or in-session.
+Design & Theme:
+	•	Primary Color: #13352C (deep teal)
+	•	Accent Color: #3AD6C5 (bright cyan)
+	•	Clean, minimalist UI emphasizing ease-of-use and clarity of actions.
+	•	Desktop-optimized responsive layout; no mobile-specific adjustments required.
+Security and Privacy:
+	•	No authentication required.
+	•	Session secured by the 4-digit session PIN entered by the host.
+	•	Sessions and associated data are ephemeral and cleared upon session termination.
+This detailed description should guide your website builder agent clearly through implementation.
