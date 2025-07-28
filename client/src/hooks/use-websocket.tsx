@@ -93,6 +93,13 @@ export function useWebSocket() {
     });
   };
 
+  const removeParticipant = (sessionId: string, participantId: string) => {
+    sendMessage({
+      type: 'remove_participant',
+      data: { sessionId, participantId }
+    });
+  };
+
   return {
     isConnected,
     sessionData,
@@ -102,5 +109,6 @@ export function useWebSocket() {
     submitVote,
     revealVotes,
     resetVotes,
+    removeParticipant,
   };
 }

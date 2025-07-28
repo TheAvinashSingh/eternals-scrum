@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Copy, Play, Eye, RotateCcw, LogOut, Clock, Coffee } from "lucide-react";
+import { Copy, Play, Eye, RotateCcw, LogOut, Clock, Coffee, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ const CARD_VALUES = [1, 2, 3, 5, 8, 13, 21, 34, "coffee", "?"] as const;
 export default function Session() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { isConnected, sessionData, joinSession, startVote, submitVote, revealVotes, resetVotes } = useWebSocket();
+  const { isConnected, sessionData, joinSession, startVote, submitVote, revealVotes, resetVotes, removeParticipant, leaveSession: wsLeaveSession } = useWebSocket();
   
   const [sessionId, setSessionId] = useState<string>("");
   const [participantId, setParticipantId] = useState<string>("");
@@ -120,7 +120,16 @@ export default function Session() {
   };
 
   const handleLeaveSession = () => {
+    if (participantId && sessionId) {
+      wsLeaveSession(sessionId, participantId);
+    }
     navigate("/");
+  };
+
+  const handleRemoveParticipant = (participantIdToRemove: string) => {
+    if (isHost && sessionId) {
+      removeParticipant(sessionId, participantIdToRemove);
+    }
   };
 
   const calculateStats = () => {
@@ -318,13 +327,25 @@ export default function Session() {
                   return (
                     <div
                       key={participant.id}
-                      className="bg-slate-50 rounded-lg p-4 text-center border-2 border-transparent hover:border-accent transition-all"
+                      className="bg-slate-50 rounded-lg p-4 text-center border-2 border-transparent hover:border-accent transition-all relative"
                     >
+                      {/* Remove button for hosts */}
+                      {isHost && !participant.isHost && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveParticipant(participant.id)}
+                          className="absolute top-2 right-2 h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <UserMinus className="h-3 w-3" />
+                        </Button>
+                      )}
+                      
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${
                         participant.isHost ? "bg-primary" : "bg-slate-400"
                       }`}>
                         <span className="text-white font-semibold">
-                          {participant.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          {participant.name.split(' ').map((n: any) => n[0]).join('').toUpperCase().slice(0, 2)}
                         </span>
                       </div>
                       <div className="font-medium text-slate-900">{participant.name}</div>

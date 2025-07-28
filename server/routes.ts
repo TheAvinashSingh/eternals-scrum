@@ -231,6 +231,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             await storage.removeParticipant(participantId);
             clients.delete(participantId);
+            
+            // Close the WebSocket connection for this participant
+            ws.close();
+
+            await broadcastSessionUpdate(sessionId);
+            break;
+          }
+
+          case 'remove_participant': {
+            const { sessionId, participantId } = validatedMessage.data;
+            
+            // Only allow hosts to remove participants
+            const session = await storage.getSession(sessionId);
+            const requesterParticipant = await storage.getParticipant(ws.participantId || '');
+            
+            if (!session || !requesterParticipant?.isHost) {
+              ws.send(JSON.stringify({ error: 'Unauthorized' }));
+              return;
+            }
+
+            await storage.removeParticipant(participantId);
+            
+            // Close the WebSocket connection for the removed participant
+            const removedClient = clients.get(participantId);
+            if (removedClient) {
+              removedClient.close();
+              clients.delete(participantId);
+            }
 
             await broadcastSessionUpdate(sessionId);
             break;
@@ -244,6 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     ws.on('close', async () => {
       if (ws.participantId && ws.sessionId) {
+        // Mark participant as disconnected instead of removing them immediately
         await storage.updateParticipant(ws.participantId, { isConnected: false });
         clients.delete(ws.participantId);
         await broadcastSessionUpdate(ws.sessionId);
